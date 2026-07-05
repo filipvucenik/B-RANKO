@@ -1,0 +1,35 @@
+seed: 42
+output_dir: runs/branko_finetune
+resume_from_checkpoint: null
+init_model: weights/branko_mega_cpool128.ckpt
+strict_init: true
+export_model: true
+export_model_name: branko_final.ckpt
+
+data:
+  train_path: data/aptadiff_datasetA/datasetA_IGFBP3_P6_train.fasta
+  val_path: data/aptadiff_datasetA/datasetA_IGFBP3_P6_val.fasta
+  batch_size: 32
+  num_workers: 4
+  train_merge_index: uniform
+  val_merge_index: half
+
+training:
+  learning_rate: 1.0e-5
+  weight_decay: 0.01
+  betas: [0.9, 0.999]
+  warmup_steps: 500
+  cosine_steps: 39000
+  min_learning_rate: 1.0e-6
+
+trainer:
+  accelerator: gpu
+  devices: 1
+  precision: bf16-mixed
+  max_epochs: 10
+  max_steps: -1
+  accumulate_grad_batches: 1
+  log_every_n_steps: 20
+  gradient_clip_val: 1.0
+  check_val_every_n_epoch: 1
+  checkpoint_every_n_steps: null

@@ -1,0 +1,29 @@
+output_dir: data/pretraining
+
+datasets:
+  - https://zenodo.org/records/14642546/files/GARNET_Database.zip
+  - GARNET_Database/228_RNA_dataset.fa.gz
+  - GARNET_Database/23S_rRNA_full_length.fa.gz
+  - GARNET_Database/16S_rRNA_full_length.fa.gz
+  - GARNET_Database/5S_rRNA_full_length.fa.gz
+  - https://ftp.ebi.ac.uk/pub/databases/Rfam/15.1/fasta_files/Rfam.fa.gz
+  - https://ftp.ebi.ac.uk/pub/databases/RNAcentral/releases/26.0/sequences/rnacentral_active.fasta.gz
+
+filtering:
+  min_length: 16
+  max_length: 2048
+  max_ambiguous_fraction: 0.2
+
+clustering:
+  enabled: true
+  min_seq_id: 0.9
+  coverage: 0.8
+  threads: 16
+
+split:
+  validation_size: 100000
+  random_seed: 42
+
+cleanup:
+  keep_downloads: false
+  keep_full_dataset: true

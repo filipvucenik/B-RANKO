@@ -1,0 +1,40 @@
+seed: 42
+output_dir: runs/branko_pretrain
+resume_from_checkpoint: null
+export_model: true
+export_model_name: branko_final.ckpt
+
+model:
+  embedding_dim: 640
+  num_layers: 30
+  num_heads: 20
+  dropout: 0.0
+  use_rotary: true
+
+data:
+  train_path: /path/to/train.fasta
+  val_path: /path/to/val.fasta
+  batch_size: 16
+  num_workers: 2
+  train_merge_index: uniform
+  val_merge_index: half
+
+training:
+  learning_rate: 5.0e-5
+  weight_decay: 0.01
+  betas: [0.9, 0.999]
+  warmup_steps: 2000
+  cosine_steps: 200000
+  min_learning_rate: 1.0e-5
+
+trainer:
+  accelerator: gpu
+  devices: 1
+  precision: bf16-mixed
+  max_epochs: 100
+  max_steps: -1
+  accumulate_grad_batches: 4
+  log_every_n_steps: 50
+  gradient_clip_val: 1.0
+  check_val_every_n_epoch: 1
+  checkpoint_every_n_steps: 20000

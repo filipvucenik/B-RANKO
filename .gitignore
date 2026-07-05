@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.DS_Store
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+runs/
+weights/
+condaenv*
+branko.egg-info
