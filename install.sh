@@ -5,36 +5,53 @@ ENV_NAME="branko"
 OUTPUT_DIR="weights"
 PRETRAIN_MODEL_NAME="branko_mega_cpool128.ckpt"
 APTAMER_MODEL_NAME="branko_aptamer_igfbp3_cpool128.ckpt"
+PRETRAIN_MODEL_URL="https://zenodo.org/records/21242783/files/branko_mega_cpool128.ckpt?download=1"
+APTAMER_MODEL_URL="https://zenodo.org/records/21242783/files/branko_aptamer_igfbp3_cpool128.ckpt?download=1"
+ZENODO_RECORD_URL="https://zenodo.org/records/21242783"
+SKIP_WEIGHTS=0
+FORCE_DOWNLOAD=0
 
 print_usage() {
   cat <<'EOF'
 Usage:
-  ./install.sh
+  ./install.sh [--skip-weights] [--force-download]
 
 This script:
   1. creates or updates the `branko` conda environment
   2. installs the package in editable mode
-  3. leaves the current `weights/` directory untouched
+  3. downloads released model files into `weights/`
+
+Options:
+  --skip-weights    skip downloading released model files
+  --force-download  re-download model files even if they already exist
 
 Notes:
-  - model downloads are currently mocked
-  - if you already have the released model files in `weights/`, nothing else is needed
+  - released weights are hosted on Zenodo:
+    https://zenodo.org/records/21242783
 EOF
 }
 
-if [[ $# -gt 0 ]]; then
+while [[ $# -gt 0 ]]; do
   case "$1" in
     --help|-h)
       print_usage
       exit 0
       ;;
+    --skip-weights)
+      SKIP_WEIGHTS=1
+      shift
+      ;;
+    --force-download)
+      FORCE_DOWNLOAD=1
+      shift
+      ;;
     *)
-      echo "install.sh does not accept options right now."
+      echo "Unknown option: $1"
       print_usage
       exit 1
       ;;
   esac
-fi
+done
 
 if command -v mamba >/dev/null 2>&1; then
   CONDA_CMD="mamba"
@@ -72,8 +89,46 @@ pip install --no-cache-dir --no-build-isolation flash-attn==2.7.3
 
 mkdir -p "${OUTPUT_DIR}"
 
+download_model() {
+  local name="$1"
+  local url="$2"
+  local destination="${OUTPUT_DIR}/${name}"
+  local temp_file
+
+  if [[ -f "${destination}" && "${FORCE_DOWNLOAD}" -eq 0 ]]; then
+    echo "Model already present: ${destination}"
+    return 0
+  fi
+
+  temp_file="$(mktemp "${destination}.tmp.XXXXXX")"
+
+  echo "Downloading ${name} from Zenodo..."
+  if [[ "${DOWNLOAD_CMD}" == "curl" ]]; then
+    curl --fail --location --progress-bar --output "${temp_file}" "${url}"
+  else
+    wget --show-progress -O "${temp_file}" "${url}"
+  fi
+
+  mv "${temp_file}" "${destination}"
+  echo "Saved ${destination}"
+}
+
 echo "Environment ready."
-echo "Model downloading is currently mocked."
-echo "Expected model files:"
-echo "  - ${OUTPUT_DIR}/${PRETRAIN_MODEL_NAME}"
-echo "  - ${OUTPUT_DIR}/${APTAMER_MODEL_NAME}"
+
+if [[ "${SKIP_WEIGHTS}" -eq 1 ]]; then
+  echo "Skipping model downloads."
+else
+  if command -v curl >/dev/null 2>&1; then
+    DOWNLOAD_CMD="curl"
+  elif command -v wget >/dev/null 2>&1; then
+    DOWNLOAD_CMD="wget"
+  else
+    echo "Could not find curl or wget for model downloads."
+    exit 1
+  fi
+
+  download_model "${PRETRAIN_MODEL_NAME}" "${PRETRAIN_MODEL_URL}"
+  download_model "${APTAMER_MODEL_NAME}" "${APTAMER_MODEL_URL}"
+fi
+
+echo "Zenodo record: ${ZENODO_RECORD_URL}"

@@ -6,7 +6,7 @@ B-RANKO is a decoder-only RNA language model built around bidirectional autoregr
 
 ![B-RANKO model overview](assets/figures/model_architecture.png)
 
-B-RANKO combines autoregressive RNA generation with bidirectional contextual modeling inside a single decoder-only architecture. The model operates on nucleotide-level tokens with a shared transformer backbone, rotary positional embeddings, and two output heads:
+B-RANKO combines autoregressive RNA generation with bidirectional contextual modeling inside a single decoder-only architecture. The model operates on nucleotide-level tokens with a shared transformer backbone, rotary positional embeddings and two output heads:
 
 - a left head that predicts the next token from the left side
 - a right head that predicts the next token from the right side
@@ -26,9 +26,9 @@ For a sequence of length `T`, B-RANKO chooses a merge index `m` that determines 
 - the right side expands inward from the `<EOS>` token
 - the two fronts meet at a merge index near the center
 
-Positions `i < m` are supervised by the left head, and positions `i >= m` are supervised by the right head. The attention mask exposes only the prefix already generated from the left and the suffix already generated from the right at that inward generation step, so the model never sees future tokens from either frontier. This gives B-RANKO bidirectional context without turning the objective into masked-language modeling.
+Positions `i < m` are supervised by the left head and positions `i >= m` are supervised by the right head. The attention mask exposes only the prefix already generated from the left and the suffix already generated from the right at that inward generation step, so the model never sees future tokens from either frontier. This gives B-RANKO bidirectional context without turning the objective into masked-language modeling.
 
-At inference time, fixed-length generation follows the same inward pattern. The sequence is initialized with `<SOS>` and `<EOS>`, and tokens are sampled from both sides toward the middle. If the two fronts meet at a single center position, the left and right logits are averaged before the final sample. For representation extraction, the same backbone can be run with full bidirectional self-attention to produce contextual per-nucleotide states and pooled sequence embeddings.
+At inference time, fixed-length generation follows the same inward pattern. The sequence is initialized with `<SOS>` and `<EOS>` and tokens are sampled from both sides toward the middle. If the two fronts meet at a single center position, the left and right logits are averaged before the final sample. For representation extraction, the same backbone can be run with full bidirectional self-attention to produce contextual per-nucleotide states and pooled sequence embeddings.
 
 ## Workflows
 
@@ -42,7 +42,7 @@ Fine-tuning keeps the same model and the same inward training objective, but ini
 
 ### Representation learning
 
-Representation learning uses the same trained model in encoding mode rather than generation mode. Complete RNA sequences are encoded with bidirectional attention, which produces contextual token-level hidden states. Sequence-level representations are then obtained with covariance pooling, which can then be used for downstream structure, function, and RNA engineering tasks.
+Representation learning uses the same trained model in encoding mode rather than generation mode. Complete RNA sequences are encoded with bidirectional attention, which produces contextual token-level hidden states. Sequence-level representations are then obtained with covariance pooling, which can then be used for downstream structure, function and RNA engineering tasks.
 
 ## Repository layout
 
@@ -97,7 +97,13 @@ Create the environment and install the package:
 ./install.sh
 ```
 
-The install script currently does not download model files. If the released model files are already present in `weights/`, you can use them directly after installation.
+The install script now downloads the released checkpoints into `weights/` if they are not already present. Use `./install.sh --skip-weights` to skip downloads or `./install.sh --force-download` to re-download them.
+
+Released weights are hosted on Zenodo:
+
+- record page: https://zenodo.org/records/21242783
+- base pretrained model: https://zenodo.org/records/21242783/files/branko_mega_cpool128.ckpt
+- IGFBP3 aptamer fine-tuned model: https://zenodo.org/records/21242783/files/branko_aptamer_igfbp3_cpool128.ckpt
 
 ## Generation
 
@@ -132,7 +138,7 @@ python scripts/evaluate.py \
   --output-dir runs/generation_demo/evaluation
 ```
 
-By default, evaluation includes length, GC content, average MFE per nucleotide, MMseqs2 novelty, and MMseqs2 diversity metrics.
+By default, evaluation includes length, GC content, average MFE per nucleotide, MMseqs2 novelty and MMseqs2 diversity metrics.
 
 
 
@@ -159,4 +165,4 @@ The notebook is organized into three short parts:
 2. de novo RNA generation
 3. representation extraction with covariance pooling
 
-It uses the released `weights/branko_mega_cpool128.ckpt` bundle, so the sequence-level representation example runs with the covariance-pooling head enabled.
+It uses the released `weights/branko_mega_cpool128.ckpt` bundle.
